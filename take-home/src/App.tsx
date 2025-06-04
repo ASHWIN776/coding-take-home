@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   fetchData,
   fetchByProperty,
@@ -15,47 +15,42 @@ const primaryText = 'text-black';
 function App() {
   const [property, setProperty] = useState<Property>('color');
   const [value, setValue] = useState<string>('');
-  const [valueOptions, setValueOptions] = useState<string[]>([]);
   const [groupByCountry, setGroupByCountry] = useState(false);
   const [showMissing, setShowMissing] = useState(false);
-  const [listings, setListings] = useState<Listing[]>([]);
-  const [grouped, setGrouped] = useState<Record<string, Listing[]>>({});
 
-  useEffect(() => {
+  const valueOptions = useMemo(() => {
     const allData: Listing[] = fetchData();
-    const values = Array.from(new Set(
+    return Array.from(new Set(
       allData.map((item) => item[property]).filter((v): v is string => !!v)
     ));
-    setValueOptions(values);
-    setValue(values[0] || '');
   }, [property]);
+  const listings = useMemo(() => {
+    if (showMissing) {
+      return fetchNullData(property);
+    } else if (value) {
+      return fetchByProperty(property, value);
+    } else {
+      return [];
+    }
+  }, [property, value, showMissing]);
+  const grouped = useMemo(() => {
+    if (groupByCountry) {
+      return listings.reduce((acc, item) => {
+        const country = item.country || 'Unknown';
+        acc[country] = acc[country] || [];
+        acc[country].push(item);
+        return acc;
+      }, {} as Record<string, Listing[]>);
+    } else {
+      return {};
+    }
+  }, [groupByCountry, listings]);
 
   useEffect(() => {
-  if (showMissing) {
-    const missing = fetchNullData(property);
-    setListings(missing);
-  } else if (value) {
-    const filtered = fetchByProperty(property, value);
-    setListings(filtered);
-  } else {
-    setListings([]);
-  }
-}, [property, value, showMissing]);
-
-useEffect(() => {
-  if (groupByCountry) {
-    const groupedData = listings.reduce((acc, item) => {
-      if (item.country) {
-        acc[item.country] = acc[item.country] || [];
-        acc[item.country].push(item);
-      }
-      return acc;
-    }, {} as Record<string, Listing[]>);
-    setGrouped(groupedData);
-  } else {
-    setGrouped({});
-  }
-}, [groupByCountry, listings]);
+    if (!valueOptions.includes(value)) {
+      setValue(valueOptions[0] || '');
+    }
+  }, [property, valueOptions, value]);
 
   return (
     <div className={`min-h-screen ${primaryBg} ${primaryText} flex flex-col items-center py-10 px-2 font-sans`}>
