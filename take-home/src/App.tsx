@@ -54,8 +54,11 @@ function App() {
 
   return (
     <div className={`min-h-screen ${primaryBg} ${primaryText} flex flex-col items-center py-10 px-2 font-sans`}>
-      <div className="w-full max-w-4xl">
-        <h1 className="text-2xl font-bold mb-6 text-center">Flexible List of Listings</h1>
+      <div className="w-full max-w-4xl flex flex-col gap-6">
+        <div className="flex flex-col items-center gap-2">
+          <h1 className="text-2xl font-bold text-center">Flexible List of Listings</h1>
+          <span className="text-sm text-neutral-500">By <a href="https://github.com/ashwin776" target="_blank" rel="noopener noreferrer" className="underline">Ashwin Anil</a></span>
+        </div>
         <FilterForm
           property={property}
           setProperty={setProperty}
