@@ -1,13 +1,14 @@
 import { useState, useMemo, useEffect } from 'react';
 import {
-  fetchData,
   fetchByProperty,
-  fetchNullData
+  fetchNullData,
+  fetchCountryData
 } from './middleware/middleware.ts';
 import FilterForm from './components/filter-form.tsx';
 import GalleryView from './components/gallery-view.tsx';
 import type { Listing, Property } from './types.ts';
 import './index.css';
+import { groupDataByCountry } from './lib/utils.ts';
 
 const primaryBg = 'bg-white';
 const primaryText = 'text-black';
@@ -19,7 +20,8 @@ function App() {
   const [showMissing, setShowMissing] = useState(false);
 
   const valueOptions = useMemo(() => {
-    const allData: Listing[] = fetchData();
+    const allDataByCountry: Record<string, Listing[]> = fetchCountryData();
+    const allData = Object.values(allDataByCountry).flat();
     return Array.from(new Set(
       allData.map((item) => item[property]).filter((v): v is string => !!v)
     ));
@@ -35,12 +37,7 @@ function App() {
   }, [property, value, showMissing]);
   const grouped = useMemo(() => {
     if (groupByCountry) {
-      const groupedData = listings.reduce((acc, item) => {
-        const country = item.country || 'Unknown';
-        acc[country] = acc[country] || [];
-        acc[country].push(item);
-        return acc;
-      }, {} as Record<string, Listing[]>);
+      const groupedData = groupDataByCountry(listings);
 
       const unknownListings = groupedData['Unknown'] || [];
       delete groupedData['Unknown'];
