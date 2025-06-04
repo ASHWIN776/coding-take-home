@@ -35,12 +35,19 @@ function App() {
   }, [property, value, showMissing]);
   const grouped = useMemo(() => {
     if (groupByCountry) {
-      return listings.reduce((acc, item) => {
+      const groupedData = listings.reduce((acc, item) => {
         const country = item.country || 'Unknown';
         acc[country] = acc[country] || [];
         acc[country].push(item);
         return acc;
       }, {} as Record<string, Listing[]>);
+
+      const unknownListings = groupedData['Unknown'] || [];
+      delete groupedData['Unknown'];
+      return {
+        ...groupedData,
+        'Unknown': unknownListings
+      };
     } else {
       return {};
     }
@@ -70,15 +77,14 @@ function App() {
           showMissing={showMissing}
           setShowMissing={setShowMissing}
         />
-        <div className="mt-6">
-          <GalleryView
-            listings={listings}
-            grouped={grouped}
-            groupByCountry={groupByCountry}
-            showMissing={showMissing}
-            property={property}
-          />
-        </div>
+        <GalleryView
+          listings={listings}
+          grouped={grouped}
+          groupByCountry={groupByCountry}
+          showMissing={showMissing}
+          property={property}
+          value={value}
+        />
       </div>
     </div>
   );
